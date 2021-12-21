@@ -4,7 +4,7 @@
 FROM pipill/armhf-alpine:3.6 as builder
 LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
 
-RUN ["cross-build-start"]
+# RUN ["cross-build-start"]
 
 RUN echo http://dl-4.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories && \
     echo http://dl-4.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories && \
@@ -27,17 +27,17 @@ RUN mkdir build && \
     cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp .. && \
     make -j4 && make install
 
-RUN [ "cross-build-end" ]
+# RUN [ "cross-build-end" ]
 
 FROM pipill/armhf-alpine:3.6
 LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
 
-RUN [ "cross-build-start" ]
+# RUN [ "cross-build-start" ]
 
 RUN echo http://dl-4.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories && \
     apk update
 
-RUN [ "cross-build-end" ]
+# RUN [ "cross-build-end" ]
 
 WORKDIR /usr/bin
 COPY --from=builder /tmp/bin/cluon-alarm-event-rpi .

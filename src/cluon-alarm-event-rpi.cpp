@@ -45,12 +45,14 @@ int32_t main(int32_t argc, char **argv)
 
     std::mutex alarmStateMutex;
 
+    int16_t switchStateReqValue{-1};
     std::string alarmState{commandlineArguments["initial-state"]};
     std::string prevAlarmState{alarmState};
 
     std::string const dir_out{"out"};
     std::string const value_0{"0"};
     std::string const value_1{"1"};
+    std::string const value_X{"X"};
 
 
     GPIOclass::GPIOClass rpi_alarm_pin_1(alarm_pin);
@@ -59,21 +61,33 @@ int32_t main(int32_t argc, char **argv)
 
     
 
-    auto onSwitchStateRequest{[&alarmStateMutex, &alarmState, &senderId](cluon::data::Envelope &&envelope)
+    auto onSwitchStateRequest{[&alarmStateMutex, &switchStateReqValue, &alarmState, &value_0, &value_1, &value_X, &senderId](cluon::data::Envelope &&envelope)
                               {
                                 uint32_t senderStamp = envelope.senderStamp();
                                 auto msg = cluon::extractMessage<opendlv::proxy::SwitchStateRequest>(std::move(envelope));
                                 if (senderStamp == senderId)
                                 {
                                   std::lock_guard<std::mutex> lck(alarmStateMutex);
-                                  alarmState = msg.state();
+                                  switchStateReqValue = msg.state();
+                                  if (switchStateReqValue == 1)
+                                  {
+                                    alarmState = value_0;
+                                  }
+                                  else if (switchStateReqValue == 2)
+                                  {
+                                    alarmState = value_1;
+                                  }
+                                  else
+                                  {
+                                    alarmState = value_X;
+                                  }
                                 }
                               }};
 
     auto atFrequency{
         [&od4, &rpi_alarm_pin_1,
-        &prevAlarmState, &alarmState,
-         &verbose, &debug, &senderId, &value_0, &value_1]() -> bool
+        &prevAlarmState, &alarmState, &alarmStateMutex,
+         &verbose, &debug, &senderId, &value_0, &value_1, &value_X]() -> bool
         {
           // Extrae la hora de la fecha actual
           time_t actualTime = time(0);
@@ -84,22 +98,28 @@ int32_t main(int32_t argc, char **argv)
           int32_t hh_local = t_local->tm_hour;
           std::cout << "La hora es: " << hh_local << std::endl;
 
-          if (prevAlarmState == value_0 && alarmState == value_0)
+          std::string alarmStateCopy{value_X};
+          {
+          std::lock_guard<std::mutex> lck(alarmStateMutex);
+          alarmStateCopy = alarmState;
+          }
+
+          if (prevAlarmState == value_0 && alarmStateCopy == value_0)
           {
             rpi_alarm_pin_1.setval_gpio(value_0); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 0." << std::endl;
           }
-          else if (prevAlarmState == value_0 && alarmState == value_1)
+          else if (prevAlarmState == value_0 && alarmStateCopy == value_1)
           {
             rpi_alarm_pin_1.setval_gpio(value_1); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 1." << std::endl;
           }
-          else if (prevAlarmState == value_1 && alarmState == value_0)
+          else if (prevAlarmState == value_1 && alarmStateCopy == value_0)
           {
             rpi_alarm_pin_1.setval_gpio(value_0); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 0." << std::endl;
           }
-          else if (prevAlarmState == value_1 && alarmState == value_1)
+          else if (prevAlarmState == value_1 && alarmStateCopy == value_1)
           {
             rpi_alarm_pin_1.setval_gpio(value_1); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 1." << std::endl;
@@ -108,6 +128,7 @@ int32_t main(int32_t argc, char **argv)
           {
             std::cerr << "Estado desconocido" << std::endl;
           }
+          prevAlarmState = alarmStateCopy;
 
         return true;
         }};
