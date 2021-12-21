@@ -8,5 +8,6 @@ services:    # Must be present exactly once at the beginning of the docker-compo
         image: cluon-alarm-event-rpi
         network_mode: "host"
         ipc: host
+        privileged: true
         entrypoint: /usr/bin/cluon-alarm-event-rpi
         command: "--cid=111 --hysterisis-time=10 --initial-state=0 --alarm-gpio-pin=18 --input-id=0 --verbose"

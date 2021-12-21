@@ -69,6 +69,7 @@ int32_t main(int32_t argc, char **argv)
                                 {
                                   std::lock_guard<std::mutex> lck(alarmStateMutex);
                                   switchStateReqValue = msg.state();
+                                  std::clog << "switchStateReqValue received : " << switchStateReqValue << std::endl;
                                   if (switchStateReqValue == 1)
                                   {
                                     alarmState = value_0;
@@ -81,6 +82,7 @@ int32_t main(int32_t argc, char **argv)
                                   {
                                     alarmState = value_X;
                                   }
+                                  std::clog << "alarmState : " << alarmState << std::endl;
                                 }
                               }};
 
@@ -126,7 +128,7 @@ int32_t main(int32_t argc, char **argv)
           }
           else
           {
-            std::cerr << "Estado desconocido" << std::endl;
+            std::cerr << "Estado desconocido. PrevState: " << prevAlarmState << ", CurrentState: " << alarmStateCopy << "." << std::endl;
           }
           prevAlarmState = alarmStateCopy;
 
