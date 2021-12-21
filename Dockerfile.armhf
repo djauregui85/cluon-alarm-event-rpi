@@ -1,13 +1,13 @@
 # Copyright (C) 2021  Diego Jauregui
 #
 
-FROM pipill/armhf-alpine:edge as builder
+FROM pipill/armhf-alpine:3.6 as builder
 LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
 
-RUN [ "cross-build-start" ]
+RUN ["cross-build-start"]
 
-RUN echo http://dl-4.alpinelinux.org/alpine/edge/main > /etc/apk/repositories && \
-    echo http://dl-4.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+RUN echo http://dl-4.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories && \
+    echo http://dl-4.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories && \
     apk update && \
     apk --no-cache add \
         cmake \
@@ -25,16 +25,16 @@ WORKDIR /opt/sources
 RUN mkdir build && \
     cd build && \
     cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp .. && \
-    make -j$(nproc) && make install
+    make -j4 && make install
 
 RUN [ "cross-build-end" ]
 
-FROM pipill/armhf-alpine:edge
+FROM pipill/armhf-alpine:3.6
 LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
 
 RUN [ "cross-build-start" ]
 
-RUN echo http://dl-4.alpinelinux.org/alpine/edge/main > /etc/apk/repositories && \
+RUN echo http://dl-4.alpinelinux.org/alpine/v3.6/main > /etc/apk/repositories && \
     apk update
 
 RUN [ "cross-build-end" ]

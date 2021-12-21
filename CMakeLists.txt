@@ -77,11 +77,6 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.hpp
 include_directories(SYSTEM ${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-
-# Add current build directory as include directory as it contains generated files.
-include_directories(SYSTEM ${CMAKE_BINARY_DIR})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 ################################################################################
 # Threads are necessary for linking the resulting binaries as UDPReceiver is running in parallel.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -99,7 +94,7 @@ endif()
 
 ################################################################################
 # Create executable.
-add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.hpp)
+add_executable(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PROJECT_NAME}.cpp ${CMAKE_BINARY_DIR}/opendlv-standard-message-set.hpp ${CMAKE_CURRENT_SOURCE_DIR}/src/GPIOClass.hpp)
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
 
 ################################################################################

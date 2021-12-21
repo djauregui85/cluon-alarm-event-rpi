@@ -48,9 +48,16 @@ int32_t main(int32_t argc, char **argv)
     std::string alarmState{commandlineArguments["initial-state"]};
     std::string prevAlarmState{alarmState};
 
-    GPIOclass::GPIOClass rpi_gpio(alarm_pin);
-    rpi_gpio.export_gpio(); // exports GPIO
-    rpi_gpio.setdir_gpio("out"); // Set GPIO Direction, como salida
+    std::string const dir_out{"out"};
+    std::string const value_0{"0"};
+    std::string const value_1{"1"};
+
+
+    GPIOclass::GPIOClass rpi_alarm_pin_1(alarm_pin);
+    rpi_alarm_pin_1.export_gpio(); // exports GPIO
+    rpi_alarm_pin_1.setdir_gpio(dir_out); // Set GPIO Direction, como salida
+
+    
 
     auto onSwitchStateRequest{[&alarmStateMutex, &alarmState, &senderId](cluon::data::Envelope &&envelope)
                               {
@@ -64,9 +71,9 @@ int32_t main(int32_t argc, char **argv)
                               }};
 
     auto atFrequency{
-        [&od4, &rpi_gpio,
+        [&od4, &rpi_alarm_pin_1,
         &prevAlarmState, &alarmState,
-         &verbose, &debug, &senderId]() -> bool
+         &verbose, &debug, &senderId, &value_0, &value_1]() -> bool
         {
           // Extrae la hora de la fecha actual
           time_t actualTime = time(0);
@@ -77,24 +84,24 @@ int32_t main(int32_t argc, char **argv)
           int32_t hh_local = t_local->tm_hour;
           std::cout << "La hora es: " << hh_local << std::endl;
 
-          if (prevAlarmState == "0" && alarmState == "0")
+          if (prevAlarmState == value_0 && alarmState == value_0)
           {
-            rpi_gpio.setval_gpio("0"); // Set GPIO Value (putput pins)
+            rpi_alarm_pin_1.setval_gpio(value_0); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 0." << std::endl;
           }
-          else if (prevAlarmState == "0" && alarmState == "1")
+          else if (prevAlarmState == value_0 && alarmState == value_1)
           {
-            rpi_gpio.setval_gpio("1"); // Set GPIO Value (putput pins)
+            rpi_alarm_pin_1.setval_gpio(value_1); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 1." << std::endl;
           }
-          else if (prevAlarmState == "1" && alarmState == "0")
+          else if (prevAlarmState == value_1 && alarmState == value_0)
           {
-            rpi_gpio.setval_gpio("0"); // Set GPIO Value (putput pins)
+            rpi_alarm_pin_1.setval_gpio(value_0); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 0." << std::endl;
           }
-          else if (prevAlarmState == "1" && alarmState == "1")
+          else if (prevAlarmState == value_1 && alarmState == value_1)
           {
-            rpi_gpio.setval_gpio("1"); // Set GPIO Value (putput pins)
+            rpi_alarm_pin_1.setval_gpio(value_1); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 1." << std::endl;
           }
           else
@@ -112,7 +119,7 @@ int32_t main(int32_t argc, char **argv)
     od4.timeTrigger(freq, atFrequency);
 
     // unexport GPIO
-    rpi_gpio.unexport_gpio();
+    rpi_alarm_pin_1.unexport_gpio();
     retCode = 0;
   }
   return retCode;

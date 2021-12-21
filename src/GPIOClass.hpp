@@ -1,13 +1,9 @@
-
-#ifndef GPIO_CLASS_H
-#define GPIO_CLASS_H
+#include <fstream>
 #include <string>
 #include <fstream>
 #include <string>
 #include <iostream>
 #include <sstream>
-
-using namespace std;
 
 namespace GPIOclass
 {
@@ -25,160 +21,90 @@ namespace GPIOclass
         GPIOClass(GPIOClass &&) = delete;
         GPIOClass &operator=(const GPIOClass &) = delete; // copy assignment: clean up target and copy -> no allow
         GPIOClass &operator=(GPIOClass &&) = delete;      // move assignment: clean up target and copy -> no allow
-        string gpionum; // GPIO number associated with the instance of an object
+        std::string gpionum;                              // GPIO number associated with the instance of an object
+        int8_t write2file(std::string const &, std::string const &) noexcept;
 
     public:
-        GPIOClass() noexcept;
-        // create a GPIO object that controls GPIO4 (default)
-
-        GPIOClass(string) noexcept;
-        // create a GPIO object that controls GPIOx, where x is passed to this constructor
-        
-        ~GPIOClass() = default;                // destructor: clean up
-        int export_gpio() noexcept;
-        // exports GPIO
-
-        int unexport_gpio() noexcept;
-        // unexport GPIO
-
-        int setdir_gpio(string) noexcept;
-        // Set GPIO Direction
-
-        int setval_gpio(string) noexcept;
-        // Set GPIO Value (putput pins)
-
-        int getval_gpio(string &) noexcept;
-        // Get GPIO Value (input/ output pins)
-
-        string get_gpionum() noexcept;
-        // return the GPIO number associated with the instance of an object
-
-
+        GPIOClass() noexcept;    // create a GPIO object that controls GPIO4 (default)
+        GPIOClass(std::string) noexcept;     // create a GPIO object that controls GPIOx, where x is passed to this constructor
+        ~GPIOClass() = default; // destructor: clean up
+        int8_t export_gpio() noexcept;     // exports GPIO
+        int8_t unexport_gpio() noexcept;    // unexport GPIO
+        int8_t setdir_gpio(std::string) noexcept;     // Set GPIO Direction
+        int8_t setval_gpio(std::string) noexcept;     // Set GPIO Value (putput pins)
+        int8_t getval_gpio(std::string &) noexcept;   // Get GPIO Value (input/ output pins)
+        std::string get_gpionum() noexcept;   // return the GPIO number associated with the instance of an object
     };
 
     GPIOClass::GPIOClass() noexcept : gpionum{"4"}
     {
-        // this->gpionum = "4";
-        // // GPIO4 is default
     }
 
-    GPIOClass::GPIOClass(string gnum) noexcept : gpionum{gnum}
+    GPIOClass::GPIOClass(std::string gnum) noexcept : gpionum{gnum}
     {
-        // this->gpionum = gnum;
-        // // Instatiate GPIOClass object for GPIO pin number "gnum"
     }
 
-    inline int GPIOClass::export_gpio() noexcept
+    inline int8_t GPIOClass::write2file(std::string const &a_path, std::string const &a_str) noexcept
     {
-        string export_str = "/sys/class/gpio/export";
-
-        ofstream exportgpio(export_str.c_str());
-        // Open "export" file. Convert C++ string to C string. Required for all Linux pathnames
-
-        // if (exportgpio < 0)
-        if (!exportgpio.is_open())
+        int8_t ret{0};
+        std::ofstream file(a_path, std::ofstream::out);
+        if (file.is_open())
         {
-            cout << " OPERATION FAILED: Unable to export GPIO"
-                 << this->gpionum << " ."
-                 << endl;
-            return -1;
+            file << a_str;
         }
-        exportgpio << this->gpionum;
-        // write GPIO number to export
-
-        exportgpio.close();
-        // close export file
-
-        return 0;
-    }
-
-    inline int GPIOClass::unexport_gpio() noexcept
-    {
-        string unexport_str = "/sys/class/gpio/unexport";
-
-        ofstream unexportgpio(unexport_str.c_str());
-        // Open unexport file
-
-        if (!unexportgpio.is_open())
+        else
         {
-            cout << " OPERATION FAILED: Unable to unexport GPIO"
-                 << this->gpionum << " ."
-                 << endl;
-
-            return -1;
+            std::cerr << " Could not open " << a_path << "." << std::endl;
+            // exit(1);
+            ret = 1;
         }
-        unexportgpio << this->gpionum;
-        // write GPIO number to unexport
-
-        unexportgpio.close();
-        // close unexport file
-
-        return 0;
-    }
-    inline int GPIOClass::setdir_gpio(string dir) noexcept
-    {
-
-        string setdir_str = "/sys/class/gpio/gpio" + this->gpionum + "/direction";
-
-        ofstream setdirgpio(setdir_str.c_str());
-        // open direction file for gpio
-
-        if (!setdirgpio.is_open())
-        {
-            cout << " OPERATION FAILED: Unable to set direction of GPIO"
-                 << this->gpionum
-                 << " ."
-                 << endl;
-
-            return -1;
-        }
-
-        setdirgpio << dir;
-        // write direction to direction file
-
-        setdirgpio.close();
-        // close direction file
-
-        return 0;
+        file.flush();
+        file.close();
+        return ret;
     }
 
-    inline int GPIOClass::setval_gpio(string val) noexcept
+    inline int8_t GPIOClass::export_gpio() noexcept
     {
-        string setval_str = "/sys/class/gpio/gpio" + this->gpionum + "/value";
-
-        ofstream setvalgpio(setval_str.c_str());
-        // open value file for gpio
-
-        if (!setvalgpio.is_open())
-        {
-            cout << " OPERATION FAILED: Unable to set the value of GPIO"
-                 << this->gpionum << " ."
-                 << endl;
-
-            return -1;
-        }
-
-        setvalgpio << val;
-        // write value to value file
-
-        setvalgpio.close();
-        // close value file
-
-        return 0;
+        int8_t ret;
+        std::string const export_str = "/sys/class/gpio/export";
+        ret = write2file(export_str, gpionum);
+        return ret;
     }
 
-    inline int GPIOClass::getval_gpio(string &val) noexcept
+    inline int8_t GPIOClass::unexport_gpio() noexcept
     {
-        string getval_str = "/sys/class/gpio/gpio" + this->gpionum + "/value";
+        int8_t ret;
+        std::string const unexport_str = "/sys/class/gpio/unexport";
+        ret = write2file(unexport_str, gpionum);
+        return ret;
+    }
 
-        ifstream getvalgpio(getval_str.c_str());
+    inline int8_t GPIOClass::setdir_gpio(std::string dir) noexcept
+    {
+        int8_t ret;
+        std::string const setdir_str = "/sys/class/gpio/gpio" + gpionum + "/direction";
+        ret = write2file(setdir_str, dir);
+        return ret;
+    }
+
+    inline int8_t GPIOClass::setval_gpio(std::string val) noexcept
+    {
+        int8_t ret;
+        std::string const setval_str = "/sys/class/gpio/gpio" + gpionum + "/value";
+        ret = write2file(setval_str, val);
+        return ret;
+    }
+
+    inline int8_t GPIOClass::getval_gpio(std::string &val) noexcept
+    {
+        std::string const getval_str = "/sys/class/gpio/gpio" + gpionum + "/value";
+
+        std::ifstream getvalgpio(getval_str.c_str());
         // open value file for gpio
 
         if (!getvalgpio.is_open())
         {
-            cout << " OPERATION FAILED: Unable to get value of GPIO"
-                 << this->gpionum << " ."
-                 << endl;
+            std::cout << " OPERATION FAILED: Unable to get value of GPIO" << gpionum << " ." << std::endl;
 
             return -1;
         }
@@ -197,10 +123,9 @@ namespace GPIOclass
         return 0;
     }
 
-    inline string GPIOClass::get_gpionum() noexcept
+    inline std::string GPIOClass::get_gpionum() noexcept
     {
-        return this->gpionum;
+        return gpionum;
     }
 
 }
-#endif
