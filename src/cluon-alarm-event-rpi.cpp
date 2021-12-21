@@ -126,9 +126,16 @@ int32_t main(int32_t argc, char **argv)
             rpi_alarm_pin_1.setval_gpio(value_1); // Set GPIO Value (putput pins)
             std::clog << "Pin value is set to 1." << std::endl;
           }
+          else if (prevAlarmState == value_X && alarmStateCopy == value_X)
+          {
+            rpi_alarm_pin_1.setval_gpio(value_0); // Set GPIO Value (putput pins)
+            std::clog << "Pin value is set to 0." << std::endl;
+            std::clog << "La alarma no esta activada cuando la franja horaria no esta monitoreada." << std::endl;
+          }
           else
           {
             std::cerr << "Estado desconocido. PrevState: " << prevAlarmState << ", CurrentState: " << alarmStateCopy << "." << std::endl;
+
           }
           prevAlarmState = alarmStateCopy;
 
