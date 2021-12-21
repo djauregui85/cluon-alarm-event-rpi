@@ -1,0 +1,12 @@
+version: '2'
+services:    # Must be present exactly once at the beginning of the docker-compose.yml file
+    alarm-event:
+        container_name: alarm-event-rpi
+        build:
+          context: .
+          dockerfile: Dockerfile.amd64
+        image: cluon-alarm-event-rpi
+        network_mode: "host"
+        ipc: host
+        entrypoint: /usr/bin/cluon-alarm-event-rpi
+        command: "--cid=111 --hysterisis-time=10 --initial-state=0 --alarm-gpio-pin=16 --input-id=0 --verbose"

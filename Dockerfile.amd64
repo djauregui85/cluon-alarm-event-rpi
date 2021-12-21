@@ -1,0 +1,38 @@
+# Copyright (C) 2021  Diego Jauregui
+#
+
+FROM alpine:edge as builder
+LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
+
+RUN echo http://dl-4.alpinelinux.org/alpine/edge/main > /etc/apk/repositories && \
+    echo http://dl-4.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    apk update && \
+    apk --no-cache add \
+        cmake \
+        autoconf \
+        automake \
+        libtool \
+        g++ \
+        git \
+        nasm \
+        make \
+        linux-headers \
+        upx
+
+ADD . /opt/sources
+WORKDIR /opt/sources
+RUN mkdir build && \
+    cd build && \
+    cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/tmp .. && \
+    make -j$(nproc) && make install && upx -9 /tmp/bin/cluon-alarm-event-rpi
+
+FROM alpine:edge
+LABEL Diego Jauregui "djauregui@grupominerobonanza.com"
+
+RUN echo http://dl-4.alpinelinux.org/alpine/edge/main > /etc/apk/repositories && \
+    apk update
+
+WORKDIR /usr/bin
+COPY --from=builder /tmp/bin/cluon-alarm-event-rpi .
+
+
